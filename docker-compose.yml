@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  vllm:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]
+              
