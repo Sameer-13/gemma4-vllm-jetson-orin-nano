@@ -1,0 +1,13 @@
+name: vllm-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - vllm --extra-index-url https://wheels.vllm.ai/nightly
+      - huggingface_hub[cli]
+      - openai
+      - pyyaml
+      - "vllm[audio]"
