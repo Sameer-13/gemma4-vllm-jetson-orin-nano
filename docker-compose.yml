@@ -1,34 +1,36 @@
 services:
   vllm:
-    build:
-      context: .
+    image: vllm/vllm-openai:latest
+    container_name: vllm-qwen35-4b
+    restart: unless-stopped
     ports:
       - "8000:8000"
-    runtime: nvidia
-    restart: unless-stopped
     ipc: host
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     command:
-      - "bash"
-      - "-lc"
-      - >
-        conda run --no-capture-output -n vllm-env
-        python -m vllm.entrypoints.openai.api_server
-        --model majentik/gemma-4-E2B-it-TurboQuant-AWQ-4bit
-        --host 0.0.0.0
-        --port 8000
-        --max-model-len 10000
-        --gpu-memory-utilization 0.9
-        --quantization awq
-        --reasoning-parser gemma4
-        --tool-call-parser gemma4
-        --enable-auto-tool-choice
-        --limit-mm-per-prompt image=4,audio=1
-        --async-scheduling
-        --mm-processor-kwargs '{"max_soft_tokens": 1120}'
-        --chat-template examples/tool_chat_template_gemma4.jinja
-        --max-num-seqs 2
+      - --model=cyankiwi/Qwen3.5-4B-AWQ-4bit
+      - --host=0.0.0.0
+      - --port=8000
+      - --max-model-len=10000
+      - --gpu-memory-utilization=0.9
+      - --reasoning-parser=qwen3
+      - --tool-call-parser=qwen3_coder
+      - --enable-auto-tool-choice
+      - --limit-mm-per-prompt=image=4
+      - --async-scheduling
+      - --enable-prefix-caching
+      - --max-num-seqs=2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
